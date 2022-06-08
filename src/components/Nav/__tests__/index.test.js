@@ -1,85 +1,57 @@
-// __tests__/Nav.test.js with hard coded categories
-import React from 'react';
-import { render, cleanup, fireEvent } from '@testing-library/react';
-import '@testing-library/jest-dom/extend-expect';
-import Nav from '..';
+import React, { useEffect } from 'react';
+import { capitalizeFirstLetter } from '../../utils/helpers';
 
-const categories = [
-  { name: 'portraits', description: 'Portraits of people in my life' }
-]
-const mockCurrentCategory = jest.fn();
-const mockSetCurrentCategory = jest.fn();
-const mockContactSelected = jest.fn();
-const mockSetContactSelected = jest.fn();
+function Nav(props) {
+  const {
+    categories = [],
+    setCurrentCategory,
+    contactSelected,
+    currentCategory,
+    setContactSelected,
+  } = props;
 
-afterEach(cleanup);
+  useEffect(() => {
+    document.title = capitalizeFirstLetter(currentCategory.name);
+  }, [currentCategory]);
 
-describe('Nav component', () => {
-  it('renders', () => {
-    render(<Nav
-      categories={categories}
-      setCurrentCategory={mockSetCurrentCategory}
-      currentCategory={mockCurrentCategory}
-      contactSelected={mockContactSelected}
-      setContactSelected={mockSetContactSelected}
-    />);
-  })
+  return (
+    <header className="flex-row px-1">
+      <h2>
+        <a data-testid="link" href="/">
+          <span role="img" aria-label="camera"> 📸</span> Oh Snap!
+        </a>
+      </h2>
+      <nav>
+        <ul className="flex-row">
+          <li className="mx-2">
+            <a data-testid="about" href="#about" onClick={() => setContactSelected(false)}>
+              About me
+            </a>
+          </li>
+          <li className={`mx-2 ${contactSelected && 'navActive'}`}>
+            <span onClick={() => setContactSelected(true)}>Contact</span>
+          </li>
+          {categories.map((category) => (
+            <li
+              className={`mx-1 ${
+                currentCategory.name === category.name && !contactSelected && 'navActive'
+                }`}
+              key={category.name}
+            >
+              <span
+                onClick={() => {
+                  setCurrentCategory(category);
+                  setContactSelected(false);
+                }}
+              >
+                {capitalizeFirstLetter(category.name)}
+              </span>
+            </li>
+          ))}
+        </ul>
+      </nav>
+    </header>
+  );
+}
 
-  it('matches snapshot DOM node structure', () => {
-    const { asFragment } = render(<Nav
-      categories={categories}
-      setCurrentCategory={mockSetCurrentCategory}
-      currentCategory={mockCurrentCategory}
-      contactSelected={mockContactSelected}
-      setContactSelected={mockSetContactSelected}
-    />);
-
-    expect(asFragment()).toMatchSnapshot();
-  });
-})
-
-describe('emoji is visible', () => {
-  it('inserts emoji into the h2', () => {
-    const { getByLabelText } = render(<Nav
-      categories={categories}
-      setCurrentCategory={mockSetCurrentCategory}
-      currentCategory={mockCurrentCategory}
-      contactSelected={mockContactSelected}
-      setContactSelected={mockSetContactSelected}
-    />);
-
-    expect(getByLabelText('camera')).toHaveTextContent('📸');
-  });
-})
-
-describe('links are visible', () => {
-  it('inserts text into the home link', () => {
-    const { getByTestId } = render(<Nav
-      categories={categories}
-      setCurrentCategory={mockSetCurrentCategory}
-      currentCategory={mockCurrentCategory}
-      contactSelected={mockContactSelected}
-      setContactSelected={mockSetContactSelected}
-    />);
-
-    expect(getByTestId('link')).toHaveTextContent('Oh Snap!');
-    expect(getByTestId('about')).toHaveTextContent('About me');
-  });
-})
-
-describe('onClick events', () => {
-  it('calls the click handler when clicked', () => {
-    const { getByText } = render(<Nav
-      categories={categories}
-      setCurrentCategory={mockSetCurrentCategory}
-      currentCategory={mockCurrentCategory}
-      contactSelected={mockContactSelected}
-      setContactSelected={mockSetContactSelected}
-    />);
-    fireEvent.click(getByText('About me'))
-    fireEvent.click(getByText('Contact'))
-    fireEvent.click(getByText('Portraits'))
-
-    expect(mockSetContactSelected).toHaveBeenCalledTimes(3);
-  });
-})
+export default Nav;
